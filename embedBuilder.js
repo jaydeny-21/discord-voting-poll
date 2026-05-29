@@ -14,7 +14,10 @@ const DISCORD_RED     = 0xED4245;
 function makeBar(pct, length = 12) {
   const filled = Math.round((pct / 100) * length);
   const empty  = length - filled;
-  return '█'.repeat(filled) + '░'.repeat(empty);
+  return '▓'.repeat(filled) + '░'.repeat(empty);
+  
+}
+
 }
 
 // Build the main poll embed
