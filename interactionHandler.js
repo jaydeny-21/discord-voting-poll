@@ -3,6 +3,7 @@
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 const { createPoll, getPoll, setMessageId, toggleVote, addOption } = require('./polls');
 const { buildPollEmbed, buildVoteRows, buildResultEmbed } = require('./embedBuilder');
+const NUM_OPTIONS_UPFRONT = 3; // user can create up to 3 options upfront
 
 async function handleInteraction(interaction) {
   try {
@@ -52,9 +53,9 @@ async function handleInteraction(interaction) {
 async function handlePollCommand(interaction) {
   const question = interaction.options.getString('question');
 
-  // Collect up to 8 options
+  // Collect options
   const options = [];
-  for (let i = 1; i <= 8; i++) {
+  for (let i = 1; i <= NUM_OPTIONS_UPFRONT; i++) {
     const val = interaction.options.getString(`option${i}`);
     if (val) options.push(val.trim());
   }

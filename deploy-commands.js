@@ -6,7 +6,7 @@ const { token, clientId, guildId } = require('./config');
 const commands = [
   new SlashCommandBuilder()
     .setName('poll')
-    .setDescription('Create a voting poll')
+    .setDescription('Let's make a poll')
     .addStringOption(o =>
       o.setName('question')
        .setDescription('The poll question')
@@ -25,12 +25,7 @@ const commands = [
        .setRequired(true)
        .setMaxLength(80)
     )
-    .addStringOption(o => o.setName('option3').setDescription('Option 3').setMaxLength(80))
-    .addStringOption(o => o.setName('option4').setDescription('Option 4').setMaxLength(80))
-    .addStringOption(o => o.setName('option5').setDescription('Option 5').setMaxLength(80))
-    .addStringOption(o => o.setName('option6').setDescription('Option 6').setMaxLength(80))
-    .addStringOption(o => o.setName('option7').setDescription('Option 7').setMaxLength(80))
-    .addStringOption(o => o.setName('option8').setDescription('Option 8').setMaxLength(80))
+    .addStringOption(o => o.setName('option3').setDescription('Option 3 (Add more later)').setMaxLength(80))
     .toJSON(),
 ];
 
