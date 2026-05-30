@@ -51,7 +51,7 @@ function buildPollEmbed(poll) {
 
     embed.addFields({
       name: `${i + 1}. ${opt.label}`,
-      value: `${bar}  **${pct}%** (${count} vote${count !== 1 ? 's' : ''})\n${names}`,
+      value: `${bar}\u2002 **${pct}%**\u2002•\u2002(${count})\n${names}`,
       inline: false,
     });
   });
@@ -82,7 +82,7 @@ function buildVoteRows(poll) {
 
   if (btnCount > 0) rows.push(currentRow);
 
-  // Add option row: "Add option" button
+  // Add option row: "Add option" + "End poll" button
   if (rows.length < 5) {
     const actionRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -109,14 +109,15 @@ function buildResultEmbed(poll) {
 
   const embed = new EmbedBuilder()
     .setColor(DISCORD_GREEN)
-    .setTitle(`  Poll Ended — ${poll.question}`)
+    .setTitle(`Poll Ended - ${poll.question}`)
     .setDescription(
       total === 0
         ? '*No votes were cast.*'
         : `**Winner: ${winner.label}** with ${winner.voters.size} vote${winner.voters.size !== 1 ? 's' : ''}!`
     )
-    .setFooter({ text: `Poll by ${poll.creatorName}  •  ${total} total vote${total !== 1 ? 's' : ''}` })
-    .setTimestamp();
+    .setFooter({ 
+      text: `${total} vote${total !== 1 ? 's' : ''}\u2002•\u2002Poll by ${poll.creatorName}\u2002•\u2002${getFormattedTime()}`
+    })
 
   poll.options.forEach((opt, i) => {
     const count = opt.voters.size;
@@ -126,7 +127,7 @@ function buildResultEmbed(poll) {
 
     embed.addFields({
       name: `${i + 1}. ${opt.label}`,
-      value: `${bar}  **${pct}%** (${count})\n${names}`,
+      value: `${bar}\u2002 **${pct}%**\u2002•\u2002(${count})\n${names}`,
       inline: false,
     });
   });
