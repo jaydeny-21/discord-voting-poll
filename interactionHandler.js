@@ -74,7 +74,7 @@ async function handlePollCommand(interaction) {
   });
 
   const embed = buildPollEmbed(poll);
-  const rows  = buildVoteRows(poll);
+  const rows  = buildVoteRows(poll, interaction.user.id);
 
   const reply = await interaction.reply({
     embeds: [embed],
@@ -100,7 +100,7 @@ async function handleVote(interaction, pollId, optionId) {
   }
 
   const embed = buildPollEmbed(poll);
-  const rows  = buildVoteRows(poll);
+  const rows  = buildVoteRows(poll, interaction.user.id);
 
   await interaction.update({ embeds: [embed], components: rows });
 }
@@ -118,9 +118,8 @@ async function handleAddOptionModal(interaction, pollId) {
 
   const input = new TextInputBuilder()
     .setCustomId('option_label')
-    .setLabel('Option text')
+    .setLabel('Drop your option here')
     .setStyle(TextInputStyle.Short)
-    .setPlaceholder('e.g. Boba cafe on Main St')
     .setMaxLength(80)
     .setRequired(true);
 
@@ -148,7 +147,7 @@ async function handleAddOptionSubmit(interaction, pollId) {
   }
 
   const embed = buildPollEmbed(poll);
-  const rows  = buildVoteRows(poll);
+  const rows  = buildVoteRows(poll, interaction.user.id);
 
   // Update the original poll message
   const channel = interaction.channel;
