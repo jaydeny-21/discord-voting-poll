@@ -14,10 +14,18 @@ const DISCORD_RED     = 0xED4245;
 function makeBar(pct, length = 12) {
   const filled = Math.round((pct / 100) * length);
   const empty  = length - filled;
-  return '▓'.repeat(filled) + '░'.repeat(empty);
-  
+  return '█'.repeat(filled) + '░'.repeat(empty);
 }
 
+
+// Format current time as "Today at 6:01 PM"
+function getFormattedTime() {
+  const now = new Date();
+  let hours = now.getHours();
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return `Today at ${hours}:${minutes} ${ampm}`;
 }
 
 // Build the main poll embed
@@ -26,11 +34,11 @@ function buildPollEmbed(poll) {
 
   const embed = new EmbedBuilder()
     .setColor(DISCORD_BLURPLE)
-    .setTitle(`  ${poll.question}`)
+    .setTitle(`${poll.question}`)
     .setFooter({
-      text: `Poll by ${poll.creatorName}  •  ${total} vote${total !== 1 ? 's' : ''}  •  You can vote for multiple options`,
+      text: `${total} vote${total !== 1 ? 's' : ''}\u2002•\u2002Poll by ${poll.creatorName}\u2002•\u2002${(getFormattedTime())}`
     })
-    .setTimestamp();
+
 
   // Build each option as a field
   poll.options.forEach((opt, i) => {
