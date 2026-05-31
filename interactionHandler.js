@@ -90,14 +90,14 @@ async function handlePollCommand(interaction) {
 async function handleVote(interaction, pollId, optionId) {
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: ' I couldn\'t find the poll 😔', ephemeral: true });
+    return interaction.reply({ content: ' Sorry, I couldn\'t find the poll 😔', ephemeral: true });
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
   const result = toggleVote(pollId, optionId, interaction.user.id, displayName);
 
   if (!result) {
-    return interaction.reply({ content: ' I couldn\'t find the option 😔', ephemeral: true });
+    return interaction.reply({ content: ' Sorry, I couldn\'t find the option 😔', ephemeral: true });
   }
 
   const embed = buildPollEmbed(poll);
@@ -110,7 +110,7 @@ async function handleVote(interaction, pollId, optionId) {
 async function handleAddOptionModal(interaction, pollId) {
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: ' I couldn\'t find the poll 😔', ephemeral: true });
+    return interaction.reply({ content: ' Sorry, I couldn\'t find the poll 😔', ephemeral: true });
   }
 
   const modal = new ModalBuilder()
@@ -132,7 +132,7 @@ async function handleAddOptionModal(interaction, pollId) {
 async function handleAddOptionSubmit(interaction, pollId) {
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: ' I couldn\'t find the poll 😔', ephemeral: true });
+    return interaction.reply({ content: ' Sorry, I couldn\'t find the poll 😔', ephemeral: true });
   }
 
   const label = interaction.fields.getTextInputValue('option_label').trim();
@@ -168,7 +168,7 @@ async function handleAddOptionSubmit(interaction, pollId) {
 async function handleEndPoll(interaction, pollId) {
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: ' I couldn\'t find the poll 😔', ephemeral: true });
+    return interaction.reply({ content: ' Sorry, I couldn\'t find the poll 😔', ephemeral: true });
   }
 
   // Only the poll creator or admins can end it
