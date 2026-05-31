@@ -40,7 +40,7 @@ async function handleInteraction(interaction) {
 
   } catch (err) {
     console.error('Interaction error:', err);
-    const msg = { content: ' Something went wrong. Please try again.', ephemeral: true };
+    const msg = { content: ' Something went wrong. Please try again 😔.', ephemeral: true };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(msg).catch(() => {});
     } else {
@@ -61,7 +61,7 @@ async function handlePollCommand(interaction) {
   }
 
   if (options.length < 2) {
-    return interaction.reply({ content: ' Please provide at least **2 options**.', ephemeral: true });
+    return interaction.reply({ content: ' Could you provide at least **2 options** 😁?', ephemeral: true });
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
@@ -90,14 +90,14 @@ async function handlePollCommand(interaction) {
 async function handleVote(interaction, pollId, optionId) {
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: ' Poll not found.', ephemeral: true });
+    return interaction.reply({ content: ' I couldn\'t find the poll 😔.', ephemeral: true });
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
   const result = toggleVote(pollId, optionId, interaction.user.id, displayName);
 
   if (!result) {
-    return interaction.reply({ content: ' Option not found.', ephemeral: true });
+    return interaction.reply({ content: ' I couldn\'t find the option 😔.', ephemeral: true });
   }
 
   const embed = buildPollEmbed(poll);
@@ -110,7 +110,7 @@ async function handleVote(interaction, pollId, optionId) {
 async function handleAddOptionModal(interaction, pollId) {
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: ' Poll not found.', ephemeral: true });
+    return interaction.reply({ content: ' I couldn\'t find the poll 😔.', ephemeral: true });
   }
 
   const modal = new ModalBuilder()
@@ -132,7 +132,7 @@ async function handleAddOptionModal(interaction, pollId) {
 async function handleAddOptionSubmit(interaction, pollId) {
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: ' Poll not found.', ephemeral: true });
+    return interaction.reply({ content: ' I couldn\'t find the poll 😔.', ephemeral: true });
   }
 
   const label = interaction.fields.getTextInputValue('option_label').trim();
@@ -144,7 +144,7 @@ async function handleAddOptionSubmit(interaction, pollId) {
   const result = addOption(pollId, label, interaction.user.id, displayName);
 
   if (result === 'duplicate') {
-    return interaction.reply({ content: ` The option **${label}** already exists.`, ephemeral: true });
+    return interaction.reply({ content: `My friend, option **${label}** already exists 🙂.`, ephemeral: true });
   }
 
   const embed = buildPollEmbed(poll);
@@ -159,7 +159,7 @@ async function handleAddOptionSubmit(interaction, pollId) {
   }
 
   await interaction.reply({
-    content: ` Added **${label}** to the poll — and your vote has been counted!`,
+    content: ` Look, **${displayName} just added **${label}** to the poll 😃.`,
     ephemeral: true,
   });
 }
@@ -168,7 +168,7 @@ async function handleAddOptionSubmit(interaction, pollId) {
 async function handleEndPoll(interaction, pollId) {
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: ' Poll not found.', ephemeral: true });
+    return interaction.reply({ content: ' I couldn\'t find the poll 😔.', ephemeral: true });
   }
 
   // Only the poll creator or admins can end it
@@ -177,7 +177,7 @@ async function handleEndPoll(interaction, pollId) {
 
   if (!isCreator && !isAdmin) {
     return interaction.reply({
-      content: ' Only the poll creator or a moderator can end this poll.',
+      content: ' You can\'t end something you never created ...🤔',
       ephemeral: true,
     });
   }

@@ -6,7 +6,7 @@ const { token, clientId, guildId } = require('./config');
 const commands = [
   new SlashCommandBuilder()
     .setName('poll')
-    .setDescription('Let's make a poll')
+    .setDescription('Let\'s make a poll')
     .addStringOption(o =>
       o.setName('question')
        .setDescription('The poll question')

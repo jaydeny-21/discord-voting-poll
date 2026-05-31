@@ -77,7 +77,7 @@ function buildVoteRows(poll, userId = null) {
     currentRow.addComponents(
       new ButtonBuilder()
         .setCustomId(`vote__${poll.pollId}__${opt.id}`)
-        .setLabel(`${i + 1}. ${opt.label.slice(0, 58)}`)
+        .setLabel(`${opt.label.slice(0, 58)}`)
         .setStyle(hasVoted ? ButtonStyle.Success : ButtonStyle.Secondary)
     );
     btnCount++;
