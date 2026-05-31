@@ -116,7 +116,7 @@ function buildResultEmbed(poll) {
     .setDescription(
       total === 0
         ? '*No votes were cast.*'
-        : `***Winner*****: ${winner.label}** with ${winner.voters.size} vote${winner.voters.size !== 1 ? 's' : ''}!`
+        : `***Winner*** **: ${winner.label}** with ${winner.voters.size} vote${winner.voters.size !== 1 ? 's' : ''}!`
     )
     .setFooter({ 
       text: `${total} vote${total !== 1 ? 's' : ''}\u2002•\u2002Poll by ${poll.creatorName}\u2002•\u2002${getFormattedTime()}`

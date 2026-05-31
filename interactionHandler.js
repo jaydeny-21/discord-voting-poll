@@ -3,6 +3,7 @@
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 const { createPoll, getPoll, setMessageId, toggleVote, addOption } = require('./polls');
 const { buildPollEmbed, buildVoteRows, buildResultEmbed } = require('./embedBuilder');
+const MSG = require('./messages'); 
 const NUM_OPTIONS_UPFRONT = 3; // user can create up to 3 options upfront
 
 // Repost poll to the bottom of conversation
@@ -24,7 +25,7 @@ async function repostPoll(interaction, poll, isEnded = false) {
 
 async function handleInteraction(interaction) {
   try {
-    // ── Slash Commands ──────────────────────────────────────
+    // Slash Commands 
     if (interaction.isChatInputCommand()) {
       if (interaction.commandName === 'poll') {
         await handlePollCommand(interaction);
@@ -32,7 +33,7 @@ async function handleInteraction(interaction) {
       return;
     }
 
-    // ── Button Clicks ───────────────────────────────────────
+    // Button Clicks
     if (interaction.isButton()) {
       const [action, pollId, optionId] = interaction.customId.split('__');
 
@@ -46,7 +47,7 @@ async function handleInteraction(interaction) {
       return;
     }
 
-    // ── Modal Submissions ───────────────────────────────────
+    // Modal Submissions
     if (interaction.isModalSubmit()) {
       if (interaction.customId.startsWith('addoption_modal__')) {
         const pollId = interaction.customId.replace('addoption_modal__', '');
@@ -66,7 +67,7 @@ async function handleInteraction(interaction) {
   }
 }
 
-// ── /poll command ────────────────────────────────────────────
+//  /poll command 
 async function handlePollCommand(interaction) {
   const question = interaction.options.getString('question');
 
@@ -103,7 +104,7 @@ async function handlePollCommand(interaction) {
   setMessageId(poll.pollId, reply.id);
 }
 
-// ── Vote button ──────────────────────────────────────────────
+// Vote button 
 async function handleVote(interaction, pollId, optionId) {
   const poll = getPoll(pollId);
   if (!poll) {
@@ -119,7 +120,7 @@ async function handleVote(interaction, pollId, optionId) {
 
   // const embed = buildPollEmbed(poll);
   // const rows  = buildVoteRows(poll, interaction.user.id);
-// await interaction.update({ embeds: [embed], components: rows });
+  // await interaction.update({ embeds: [embed], components: rows });
 
   // Why deferUpdate() before repostPoll() ?
   // When a user clicks a button, Discord expects an immediate response within 3 seconds
@@ -137,11 +138,11 @@ async function handleVote(interaction, pollId, optionId) {
   );
 }
 
-// ── Add option — show modal ──────────────────────────────────
+// Add option — show modal 
 async function handleAddOptionModal(interaction, pollId) {
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: ' Sorry, I couldn\'t find the poll 😔', ephemeral: true });
+    return interaction.reply({ content: 'Sorry, I couldn\'t find the poll 😔', ephemeral: true });
   }
 
   const modal = new ModalBuilder()
@@ -150,7 +151,7 @@ async function handleAddOptionModal(interaction, pollId) {
 
   const input = new TextInputBuilder()
     .setCustomId('option_label')
-    .setLabel('Drop your option here')
+    .setLabel('Tell us about your option 😃')
     .setStyle(TextInputStyle.Short)
     .setMaxLength(80)
     .setRequired(true);
@@ -159,23 +160,23 @@ async function handleAddOptionModal(interaction, pollId) {
   await interaction.showModal(modal);
 }
 
-// ── Add option — handle modal submit ────────────────────────
+// Add option — handle modal submit 
 async function handleAddOptionSubmit(interaction, pollId) {
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: ' Sorry, I couldn\'t find the poll 😔', ephemeral: true });
+    return interaction.reply({ content: 'Sorry, I couldn\'t find the poll 😔', ephemeral: true });
   }
 
   const label = interaction.fields.getTextInputValue('option_label').trim();
   if (!label) {
-    return interaction.reply({ content: ' Option label cannot be empty.', ephemeral: true });
+    return interaction.reply({ content: 'My friend, option label cannot be empty 🙂', ephemeral: true });
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
   const result = addOption(pollId, label, interaction.user.id, displayName);
 
   if (result === 'duplicate') {
-    return interaction.reply({ content: `My friend, option **${label}** already exists 🙂`, ephemeral: true });
+    return interaction.reply({ content: `Wake up, option ***${label}*** already exists 😆`, ephemeral: true });
   }
 
   // Respond to Discord immediately to prevent "Something went wrong" 
@@ -186,7 +187,7 @@ async function handleAddOptionSubmit(interaction, pollId) {
   await interaction.channel.send(MSG.REPLY_OPTION_ADDED(displayName, label));
 }
 
-// ── End poll ─────────────────────────────────────────────────
+// End poll 
 async function handleEndPoll(interaction, pollId) {
   const poll = getPoll(pollId);
   if (!poll) {
@@ -199,7 +200,7 @@ async function handleEndPoll(interaction, pollId) {
 
   if (!isCreator && !isAdmin) {
     return interaction.reply({
-      content: ' You can\'t end something you never created ...🤔',
+      content: ' Im sorry, but you can\'t end something you never created ...🙂‍↔️',
       ephemeral: true,
     });
   }
