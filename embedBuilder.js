@@ -11,10 +11,10 @@ const DISCORD_FUCHSIA = 0xEB459E;
 const DISCORD_RED     = 0xED4245;
 
 // Progress bar builder
-function makeBar(pct, length = 12) {
+function makeBar(pct, length = 15) {
   const filled = Math.round((pct / 100) * length);
   const empty  = length - filled;
-  return '█'.repeat(filled) + '░'.repeat(empty);
+  return '\u2588'.repeat(filled) + '\u2591'.repeat(empty);
 }
 
 
@@ -47,11 +47,11 @@ function buildPollEmbed(poll) {
     const bar   = makeBar(pct);
     const names = count > 0
       ? [...opt.voters.values()].join(', ')
-      : '*No votes yet*';
+      : '_No votes yet_';
 
     embed.addFields({
       name: `${i + 1}. ${opt.label}`,
-      value: `${bar}\u2002 **${pct}%**\u2002•\u2002(${count})\n${names}`,
+      value: `${bar}\u2002 **${pct}%**\u2002•\u2002(${count})\n*${names}*`,
       inline: false,
     });
   });
@@ -126,11 +126,11 @@ function buildResultEmbed(poll) {
     const count = opt.voters.size;
     const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
     const bar   = makeBar(pct);
-    const names = count > 0 ? [...opt.voters.values()].join(', ') : '*No votes*';
+    const names = count > 0 ? [...opt.voters.values()].join(', ') : '_No votes_';
 
     embed.addFields({
       name: `${i + 1}. ${opt.label}`,
-      value: `${bar}\u2002 **${pct}%**\u2002•\u2002(${count})\n${names}`,
+      value: `${bar}\u2002 **${pct}%**\u2002•\u2002(${count})\n*${names}*`,
       inline: false,
     });
   });
