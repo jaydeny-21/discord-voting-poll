@@ -5,6 +5,23 @@ const { createPoll, getPoll, setMessageId, toggleVote, addOption } = require('./
 const { buildPollEmbed, buildVoteRows, buildResultEmbed } = require('./embedBuilder');
 const NUM_OPTIONS_UPFRONT = 3; // user can create up to 3 options upfront
 
+// Repost poll to the bottom of conversation
+async function repostPoll(interaction, poll, isEnded = false) {
+  const channel = interaction.channel;
+
+  const embed = isEnded ? buildResultEmbed(poll) : buildPollEmbed(poll);
+  const rows  = isEnded ? [] : buildVoteRows(poll, interaction.user.id);
+
+  // Fetch old message first, then delete + send new one in parallel
+  const oldMessage = await channel.messages.fetch(poll.messageId).catch(() => null);
+  const [newMessage] = await Promise.all([
+    channel.send({ embeds: [embed], components: rows }),
+    oldMessage ? oldMessage.delete().catch(() => null) : Promise.resolve(),
+  ]);
+
+  setMessageId(poll.pollId, newMessage.id);
+}
+
 async function handleInteraction(interaction) {
   try {
     // ── Slash Commands ──────────────────────────────────────
@@ -100,10 +117,24 @@ async function handleVote(interaction, pollId, optionId) {
     return interaction.reply({ content: ' Sorry, I couldn\'t find the option 😔', ephemeral: true });
   }
 
-  const embed = buildPollEmbed(poll);
-  const rows  = buildVoteRows(poll, interaction.user.id);
+  // const embed = buildPollEmbed(poll);
+  // const rows  = buildVoteRows(poll, interaction.user.id);
+// await interaction.update({ embeds: [embed], components: rows });
 
-  await interaction.update({ embeds: [embed], components: rows });
+  // Why deferUpdate() before repostPoll() ?
+  // When a user clicks a button, Discord expects an immediate response within 3 seconds
+  // or it shows an error. deferUpdate() tells Discord "acknowledged, I'm working on it" 
+  // while we do the delete + repost which can take a moment. Without it you'd get interaction failed errors.
+  await interaction.deferUpdate();  
+  await repostPoll(interaction, poll);
+
+  // Display message of who just added/removed a vote
+  const opt = poll.options.find(o => o.id === optionId);
+  await interaction.channel.send(
+    result === 'added'
+      ? MSG.REPLY_VOTE_ADDED(displayName, opt.label)
+      : MSG.REPLY_VOTE_REMOVED(displayName, opt.label),
+  );
 }
 
 // ── Add option — show modal ──────────────────────────────────
@@ -147,21 +178,12 @@ async function handleAddOptionSubmit(interaction, pollId) {
     return interaction.reply({ content: `My friend, option **${label}** already exists 🙂`, ephemeral: true });
   }
 
-  const embed = buildPollEmbed(poll);
-  const rows  = buildVoteRows(poll, interaction.user.id);
+  // Respond to Discord immediately to prevent "Something went wrong" 
+  await interaction.reply({ content: 'Option added!', ephemeral: true });
 
-  // Update the original poll message
-  const channel = interaction.channel;
-  const message = await channel.messages.fetch(poll.messageId).catch(() => null);
-
-  if (message) {
-    await message.edit({ embeds: [embed], components: rows });
-  }
-
-  await interaction.reply({
-    content: `\nLook, **${displayName}** just added **${label}** to the poll 😃\n`,
-    ephemeral: true,
-  });
+  // Repost the poll, bring it to the bottom of convo
+  await repostPoll(interaction, poll);
+  await interaction.channel.send(MSG.REPLY_OPTION_ADDED(displayName, label));
 }
 
 // ── End poll ─────────────────────────────────────────────────
@@ -182,10 +204,8 @@ async function handleEndPoll(interaction, pollId) {
     });
   }
 
-  const resultEmbed = buildResultEmbed(poll);
-
-  // Remove all buttons
-  await interaction.update({ embeds: [resultEmbed], components: [] });
+  await interaction.deferUpdate();
+  await repostPoll(interaction, poll, true);
 }
 
 module.exports = { handleInteraction };
