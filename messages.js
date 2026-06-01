@@ -7,7 +7,7 @@ module.exports = {
   NO_VOTES:         '_No votes_',
   POLL_ENDED_TITLE: (question) => `Poll Ended - ${question}`,
   NO_VOTES_CAST:    '*No votes were cast.*',
-  WINNER:           (winner) => `***Winner*** **: ${winner.label}** with ${winner.voters.size} vote${winner.voters.size !== 1 ? 's' : ''}!`,
+  RESULT_WINNERS:   (winners, maxVotes) => `**Winner **: ${winners.map(w => `***${w.label}***`).join(', ')} with ${maxVotes} vote${maxVotes !== 1 ? 's' : ''}!`,
 
   //  Button labels 
   BTN_ADD_OPTION:   'Add option',

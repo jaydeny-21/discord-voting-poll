@@ -110,8 +110,8 @@ function buildVoteRows(poll, userId = null) {
 function buildResultEmbed(poll) {
   const total = getTotalVotes(poll);
 
-  const sorted = [...poll.options].sort((a, b) => b.voters.size - a.voters.size);
-  const winner = sorted[0];
+  const maxVotes = Math.max(...poll.options.map(o => o.voters.size));
+  const winners = poll.options.filter(o => o.voters.size === maxVotes);
 
   const embed = new EmbedBuilder()
     .setColor(DISCORD_GREEN)
@@ -119,7 +119,7 @@ function buildResultEmbed(poll) {
     .setDescription(
       total === 0
         ? MSG.NO_VOTES_CAST
-        : MSG.WINNER(winner)
+        : MSG.RESULT_WINNERS(winners, maxVotes)
     )
     .setFooter({ 
       text: MSG.FOOTER(total, poll.creatorName, getFormattedTime())
