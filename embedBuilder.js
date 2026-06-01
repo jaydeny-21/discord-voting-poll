@@ -2,6 +2,7 @@
 
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 const { getTotalVotes } = require('./polls');
+const MSG = require('./messages'); 
 
 // Discord brand colors
 const DISCORD_BLURPLE = 0x5865F2;
@@ -9,12 +10,14 @@ const DISCORD_GREEN   = 0x57F287;
 const DISCORD_YELLOW  = 0xFEE75C;
 const DISCORD_FUCHSIA = 0xEB459E;
 const DISCORD_RED     = 0xED4245;
+const FILLED_BLOCK    = '\u2588';
+const UNFILLED_BLOCK  = '\u2591';
 
 // Progress bar builder
 function makeBar(pct, length = 15) {
   const filled = Math.round((pct / 100) * length);
   const empty  = length - filled;
-  return '\u2588'.repeat(filled) + '\u2591'.repeat(empty);
+  return FILLED_BLOCK.repeat(filled) + UNFILLED_BLOCK.repeat(empty);
 }
 
 
@@ -25,7 +28,7 @@ function getFormattedTime() {
   const minutes = now.getMinutes().toString().padStart(2, '0');
   const ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12 || 12;
-  return `Today at ${hours}:${minutes} ${ampm}`;
+  return MSG.DATE(hours, minutes, ampm);
 }
 
 // Build the main poll embed
@@ -36,7 +39,7 @@ function buildPollEmbed(poll) {
     .setColor(DISCORD_BLURPLE)
     .setTitle(`${poll.question}`)
     .setFooter({
-      text: `${total} vote${total !== 1 ? 's' : ''}\u2002•\u2002Poll by ${poll.creatorName}\u2002•\u2002${(getFormattedTime())}`
+      text: MSG.FOOTER(total, poll.creatorName, getFormattedTime())
     })
 
 
@@ -47,11 +50,11 @@ function buildPollEmbed(poll) {
     const bar   = makeBar(pct);
     const names = count > 0
       ? [...opt.voters.values()].join(', ')
-      : '_No votes yet_';
+      : MSG.NO_VOTES_YET;
 
     embed.addFields({
-      name: `${i + 1}. ${opt.label}`,
-      value: `${bar}\u2002 **${pct}%**\u2002•\u2002(${count})\n*${names}*`,
+      name: MSG.ROW_OPTION_NAME(i, opt.label),
+      value: MSG.ROW_OPTION_VALUE(bar, pct, count,names),
       inline: false,
     });
   });
@@ -90,11 +93,11 @@ function buildVoteRows(poll, userId = null) {
     const actionRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`addoption__${poll.pollId}`)
-        .setLabel('+ Add option')
+        .setLabel(MSG.BTN_ADD_OPTION)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`endpoll__${poll.pollId}`)
-        .setLabel('End poll')
+        .setLabel(MSG.BTN_END_POLL)
         .setStyle(ButtonStyle.Danger)
     );
     rows.push(actionRow);
@@ -112,25 +115,25 @@ function buildResultEmbed(poll) {
 
   const embed = new EmbedBuilder()
     .setColor(DISCORD_GREEN)
-    .setTitle(`Poll Ended - ${poll.question}`)
+    .setTitle(MSG.POLL_ENDED_TITLE(poll.question))
     .setDescription(
       total === 0
-        ? '*No votes were cast.*'
-        : `***Winner*** **: ${winner.label}** with ${winner.voters.size} vote${winner.voters.size !== 1 ? 's' : ''}!`
+        ? MSG.NO_VOTES_CAST
+        : MSG.WINNER(winner)
     )
     .setFooter({ 
-      text: `${total} vote${total !== 1 ? 's' : ''}\u2002•\u2002Poll by ${poll.creatorName}\u2002•\u2002${getFormattedTime()}`
+      text: MSG.FOOTER(total, poll.creatorName, getFormattedTime())
     })
 
   poll.options.forEach((opt, i) => {
     const count = opt.voters.size;
     const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
     const bar   = makeBar(pct);
-    const names = count > 0 ? [...opt.voters.values()].join(', ') : '_No votes_';
+    const names = count > 0 ? [...opt.voters.values()].join(', ') : MSG.NO_VOTES;
 
     embed.addFields({
-      name: `${i + 1}. ${opt.label}`,
-      value: `${bar}\u2002 **${pct}%**\u2002•\u2002(${count})\n*${names}*`,
+      name: MSG.ROW_OPTION_NAME(i, opt.label),
+      value: MSG.ROW_OPTION_VALUE(bar, pct, count,names),
       inline: false,
     });
   });
