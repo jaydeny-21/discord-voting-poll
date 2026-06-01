@@ -20,7 +20,7 @@ const config = {
   clientId: getEnv('CLIENT_ID'),
 
   // Your Discord server (guild) ID — right-click your server icon → Copy Server ID
-  guildId: getEnv('GUIDE_ID'),
+  guildId: getEnv('GUILD_ID'),
 };
 
 module.exports =  config
