@@ -1,15 +1,16 @@
-#  Church Discord Poll Bot
+#  Discord Poll Bot
 
 A fully-featured voting bot for Discord server. Members can create polls, vote for multiple options, add their own options, and remove votes anytime — all with live results shown as progress bars with voter names.
 
-
+## Owners
+Jayden Ly
 
 ## Features
 
-- `/poll` slash command to create a poll with up to 8 options
+- `/poll` slash command to create a poll with up to 3 options upfront
 - Vote for **multiple options** at once
 - **Remove your vote** by clicking the same button again
-- **Add your own option** via the "+ Add option" button (opens a popup)
+- **Add your own option** via the "Add option" button (opens a popup)
 - See **voter names** listed under each option
 - Live **progress bar** with percentage per option
 - **End poll** button (only poll creator or mods can use it)
@@ -39,15 +40,6 @@ A fully-featured voting bot for Discord server. Members can create polls, vote f
 - **Guild ID**: Right-click your Discord server icon → **Copy Server ID**
   *(Enable Developer Mode in Discord Settings → Advanced if you don't see this)*
 
-### 3. Fill in config.js
-
-Open `config.js` and replace the three placeholder values:
-
-```js
-token:    'YOUR_BOT_TOKEN_HERE',
-clientId: 'YOUR_CLIENT_ID_HERE',
-guildId:  'YOUR_GUILD_ID_HERE',
-```
 
 ### 4. Install dependencies
 
@@ -63,12 +55,9 @@ node index.js
 
 You should see:
 ```
- Logged in as Church Poll Bot#1234
- Registering slash commands...
- Slash commands registered successfully.
+....
  Poll Bot is ready!
 ```
-
 
 
 ## Usage
@@ -103,6 +92,7 @@ discord-poll-bot/
 ├── embedBuilder.js       — Builds Discord embeds and buttons
 ├── deploy-commands.js    — Registers /poll slash command
 ├── interactionHandler.js  — Handles all button clicks and commands
+└── messages.js            — Store all texts used across the bot
 └── package.json
 ```
 

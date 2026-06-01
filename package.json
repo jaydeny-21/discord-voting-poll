@@ -1,7 +1,7 @@
 {
   "name": "discord-poll-bot",
   "version": "1.0.0",
-  "description": "Church Discord voting poll bot",
+  "description": "Discord voting poll bot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
