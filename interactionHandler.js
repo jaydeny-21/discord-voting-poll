@@ -107,16 +107,19 @@ async function handlePollCommand(interaction) {
 
 // Vote button 
 async function handleVote(interaction, pollId, optionId) {
+  // Acknowledge FIRST before any other logic
+  await interaction.deferUpdate();
+  
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
+    return interaction.followUp({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
   const result = toggleVote(pollId, optionId, interaction.user.id, displayName);
 
   if (!result) {
-    return interaction.reply({ content: MSG.REPLY_OPTION_NOT_FOUND, ephemeral: true });
+    return interaction.followUp({ content: MSG.REPLY_OPTION_NOT_FOUND, ephemeral: true });
   }
 
   // const embed = buildPollEmbed(poll);
@@ -127,7 +130,7 @@ async function handleVote(interaction, pollId, optionId) {
   // When a user clicks a button, Discord expects an immediate response within 3 seconds
   // or it shows an error. deferUpdate() tells Discord "acknowledged, I'm working on it" 
   // while we do the delete + repost which can take a moment. Without it you'd get interaction failed errors.
-  await interaction.deferUpdate();  
+  // await interaction.deferUpdate();  
   await repostPoll(interaction, poll);
 
   // Display message of who just added/removed a vote
@@ -141,24 +144,24 @@ async function handleVote(interaction, pollId, optionId) {
 
 // Add option — show modal 
 async function handleAddOptionModal(interaction, pollId) {
-  const poll = getPoll(pollId);
-  if (!poll) {
-    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
-  }
-
+  // Show modal FIRST before any poll lookup
   const modal = new ModalBuilder()
-    .setCustomId(`addoption_modal__${pollId}`)
-    .setTitle(MSG.MODAL_TITLE);
-
+  .setCustomId(`addoption_modal__${pollId}`)
+  .setTitle(MSG.MODAL_TITLE);
+  
   const input = new TextInputBuilder()
-    .setCustomId('option_label')
-    .setLabel(MODAL_LABEL)
-    .setStyle(TextInputStyle.Short)
-    .setMaxLength(80)
-    .setRequired(true);
-
+  .setCustomId('option_label')
+  .setLabel(MODAL_LABEL)
+  .setStyle(TextInputStyle.Short)
+  .setMaxLength(80)
+  .setRequired(true);
+  
   modal.addComponents(new ActionRowBuilder().addComponents(input));
   await interaction.showModal(modal);
+
+  // Poll lookup AFTER modal is shown
+  const poll = getPoll(pollId);
+  if (!poll) return;
 }
 
 // Add option — handle modal submit 
@@ -190,9 +193,11 @@ async function handleAddOptionSubmit(interaction, pollId) {
 
 // End poll 
 async function handleEndPoll(interaction, pollId) {
+  await interaction.deferUpdate();
+
   const poll = getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
+    return interaction.followUp({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
   }
 
   // Only the poll creator or admins can end it
@@ -200,13 +205,13 @@ async function handleEndPoll(interaction, pollId) {
   const isAdmin   = interaction.member?.permissions?.has('ManageMessages');
 
   if (!isCreator && !isAdmin) {
-    return interaction.reply({
+    return interaction.followUp({
       content: MSG.REPLY_NOT_CREATOR,
       ephemeral: true,
     });
   }
 
-  await interaction.deferUpdate();
+  
   await repostPoll(interaction, poll, true);
 }
 
