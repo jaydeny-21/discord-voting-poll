@@ -12,7 +12,7 @@ async function repostPoll(interaction, poll, isEnded = false) {
   const channel = interaction.channel;
 
   const embed = isEnded ? buildResultEmbed(poll) : buildPollEmbed(poll);
-  const rows  = isEnded ? [] : buildVoteRows(poll, interaction.user.id);
+  const rows  = isEnded ? [] : buildVoteRows(poll);
 
   // Fetch old message first, then delete + send new one in parallel
   const oldMessage = await channel.messages.fetch(poll.messageId).catch(() => null);
@@ -94,7 +94,7 @@ async function handlePollCommand(interaction) {
   });
 
   const embed = buildPollEmbed(poll);
-  const rows  = buildVoteRows(poll, interaction.user.id);
+  const rows  = buildVoteRows(poll);
 
   const reply = await interaction.reply({
     embeds: [embed],

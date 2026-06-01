@@ -63,7 +63,6 @@ function buildPollEmbed(poll) {
 }
 
 // Build vote buttons (one per option, up to 5 per row, max 25 total)
-// userId is passed so voted buttons are highlighted blurple with a checkmark
 function buildVoteRows(poll, userId = null) {
   const rows = [];
   let currentRow = new ActionRowBuilder();
@@ -75,13 +74,14 @@ function buildVoteRows(poll, userId = null) {
       currentRow = new ActionRowBuilder();
     }
 
-    const hasVoted = userId !== null && opt.voters.has(userId);
+    // Cant display different button state for different user due to Discord's limitation
+    // const hasVoted = userId !== null && opt.voters.has(userId);
 
     currentRow.addComponents(
       new ButtonBuilder()
         .setCustomId(`vote__${poll.pollId}__${opt.id}`)
         .setLabel(`${opt.label.slice(0, 58)}`)
-        .setStyle(hasVoted ? ButtonStyle.Success : ButtonStyle.Secondary)
+        .setStyle(ButtonStyle.Secondary)
     );
     btnCount++;
   });
