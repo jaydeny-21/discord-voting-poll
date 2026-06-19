@@ -1,15 +1,12 @@
 // embedBuilder.js — builds the Discord embed + action rows for a poll
 
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getTotalVotes } = require('./polls');
-const MSG = require('./messages'); 
+const MSG = require('./messages');
 
 // Discord brand colors
 const DISCORD_BLURPLE = 0x5865F2;
 const DISCORD_GREEN   = 0x57F287;
-const DISCORD_YELLOW  = 0xFEE75C;
-const DISCORD_FUCHSIA = 0xEB459E;
-const DISCORD_RED     = 0xED4245;
 const FILLED_BLOCK    = '\u2588';
 const UNFILLED_BLOCK  = '\u2591';
 
@@ -57,19 +54,16 @@ function buildPollEmbed(poll) {
 }
 
 // Build vote buttons (one per option, up to 5 per row, max 25 total)
-function buildVoteRows(poll, userId = null) {
+function buildVoteRows(poll) {
   const rows = [];
   let currentRow = new ActionRowBuilder();
   let btnCount = 0;
 
-  poll.options.forEach((opt, i) => {
+  poll.options.forEach((opt) => {
     if (btnCount > 0 && btnCount % 5 === 0) {
       rows.push(currentRow);
       currentRow = new ActionRowBuilder();
     }
-
-    // Cant display different button state for different user due to Discord's limitation
-    // const hasVoted = userId !== null && opt.voters.has(userId);
 
     currentRow.addComponents(
       new ButtonBuilder()
@@ -115,7 +109,7 @@ function buildResultEmbed(poll) {
         ? MSG.NO_VOTES_CAST
         : MSG.RESULT_WINNERS(winners, maxVotes)
     )
-    .setFooter({ 
+    .setFooter({
       text: MSG.FOOTER(total, poll.creatorName, MSG.DATE(poll.createdAt))
     });
 
