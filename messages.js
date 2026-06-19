@@ -21,8 +21,8 @@ module.exports = {
   REPLY_EMPTY_OPTION:     'My friend, option label cannot be empty 🙂',
   REPLY_DUPLICATE:        (label) => `Wake up, option ***${label}*** already exists 😆`,
   REPLY_OPTION_ADDED:     (displayName, label) => `Look, **${displayName}** just added ***${label}*** to the poll 👀`,
-  REPLY_VOTE_ADDED:       (displayName, label) => `✅ **${displayName}** voted for ***${label}***!`,
-  REPLY_VOTE_REMOVED:     (displayName, label) => `🗑️ **${displayName}** removed your vote from **${label}**.`,
+  REPLY_VOTE_ADDED:       (displayName, label) => `✅ **${displayName}** voted for ***${label}***`,
+  REPLY_VOTE_REMOVED:     (displayName, label) => `🗑️ **${displayName}** removed your vote from **${label}**`,
   REPLY_GENERIC_ERROR:    'Something went wrong. Please try again 😔',
   CONFIRM_OPTION_ADDED:   'Option added!',
 
