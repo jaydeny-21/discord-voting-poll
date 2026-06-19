@@ -20,16 +20,25 @@ function makeBar(pct, length = 15) {
   return FILLED_BLOCK.repeat(filled) + UNFILLED_BLOCK.repeat(empty);
 }
 
+// Helper that ddd one field per option, ranked by vote count (descending) so the
+// highest-voted options appear first. Sorts a copy so poll.options keeps
+// its original order. `emptyLabel` is shown for options with no votes.
+function addOptionFields(embed, poll, total, emptyLabel) {
+  const ranked = [...poll.options].sort((a, b) => b.voters.size - a.voters.size);
 
-// // Format current time as "Today at 6:01 PM"
-// function getFormattedTime() {
-//   const now = new Date();
-//   let hours = now.getHours();
-//   const minutes = now.getMinutes().toString().padStart(2, '0');
-//   const ampm = hours >= 12 ? 'PM' : 'AM';
-//   hours = hours % 12 || 12;
-//   return MSG.DATE(hours, minutes, ampm);
-// }
+  ranked.forEach((opt, i) => {
+    const count = opt.voters.size;
+    const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
+    const bar   = makeBar(pct);
+    const names = count > 0 ? [...opt.voters.values()].join(', ') : emptyLabel;
+
+    embed.addFields({
+      name: MSG.ROW_OPTION_NAME(i, opt.label),
+      value: MSG.ROW_OPTION_VALUE(bar, pct, count, names),
+      inline: false,
+    });
+  });
+}
 
 // Build the main poll embed
 function buildPollEmbed(poll) {
@@ -40,24 +49,9 @@ function buildPollEmbed(poll) {
     .setTitle(`${poll.question}`)
     .setFooter({
       text: MSG.FOOTER(total, poll.creatorName, MSG.DATE(poll.createdAt))
-    })
-
-
-  // Build each option as a field
-  poll.options.forEach((opt, i) => {
-    const count = opt.voters.size;
-    const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
-    const bar   = makeBar(pct);
-    const names = count > 0
-      ? [...opt.voters.values()].join(', ')
-      : MSG.NO_VOTES_YET;
-
-    embed.addFields({
-      name: MSG.ROW_OPTION_NAME(i, opt.label),
-      value: MSG.ROW_OPTION_VALUE(bar, pct, count,names),
-      inline: false,
     });
-  });
+
+  addOptionFields(embed, poll, total, MSG.NO_VOTES_YET);
 
   return embed;
 }
@@ -123,20 +117,9 @@ function buildResultEmbed(poll) {
     )
     .setFooter({ 
       text: MSG.FOOTER(total, poll.creatorName, MSG.DATE(poll.createdAt))
-    })
-
-  poll.options.forEach((opt, i) => {
-    const count = opt.voters.size;
-    const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
-    const bar   = makeBar(pct);
-    const names = count > 0 ? [...opt.voters.values()].join(', ') : MSG.NO_VOTES;
-
-    embed.addFields({
-      name: MSG.ROW_OPTION_NAME(i, opt.label),
-      value: MSG.ROW_OPTION_VALUE(bar, pct, count,names),
-      inline: false,
     });
-  });
+
+  addOptionFields(embed, poll, total, MSG.NO_VOTES);
 
   return embed;
 }
