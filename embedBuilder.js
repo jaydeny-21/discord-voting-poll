@@ -21,15 +21,15 @@ function makeBar(pct, length = 15) {
 }
 
 
-// Format current time as "Today at 6:01 PM"
-function getFormattedTime() {
-  const now = new Date();
-  let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12 || 12;
-  return MSG.DATE(hours, minutes, ampm);
-}
+// // Format current time as "Today at 6:01 PM"
+// function getFormattedTime() {
+//   const now = new Date();
+//   let hours = now.getHours();
+//   const minutes = now.getMinutes().toString().padStart(2, '0');
+//   const ampm = hours >= 12 ? 'PM' : 'AM';
+//   hours = hours % 12 || 12;
+//   return MSG.DATE(hours, minutes, ampm);
+// }
 
 // Build the main poll embed
 function buildPollEmbed(poll) {
@@ -39,7 +39,7 @@ function buildPollEmbed(poll) {
     .setColor(DISCORD_BLURPLE)
     .setTitle(`${poll.question}`)
     .setFooter({
-      text: MSG.FOOTER(total, poll.creatorName, getFormattedTime())
+      text: MSG.FOOTER(total, poll.creatorName, MSG.DATE(poll.createdAt))
     })
 
 
@@ -122,7 +122,7 @@ function buildResultEmbed(poll) {
         : MSG.RESULT_WINNERS(winners, maxVotes)
     )
     .setFooter({ 
-      text: MSG.FOOTER(total, poll.creatorName, getFormattedTime())
+      text: MSG.FOOTER(total, poll.creatorName, MSG.DATE(poll.createdAt))
     })
 
   poll.options.forEach((opt, i) => {

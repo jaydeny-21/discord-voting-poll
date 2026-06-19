@@ -25,6 +25,7 @@ function createPoll({ question, options, creatorId, creatorName, channelId }) {
     creatorName,
     channelId,
     messageId: null,
+    createdAt: new Date(),
     options: options.map((label, i) => ({
       id: `opt_${pollId}_${i}`,
       label,

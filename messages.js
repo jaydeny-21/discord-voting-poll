@@ -38,5 +38,5 @@ module.exports = {
   ROW_OPTION_VALUE:       (bar, pct, count, names) => `${bar}\u2002 **${pct}%**\u2002•\u2002(${count})\n*${names}*`,
 
   // Date   Today at 6:01 PM
-  DATE:                   (hours, minutes, ampm) => `Today at ${hours}:${minutes} ${ampm}`
+  DATE:                   (date) => `Created on  ${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear().toString().slice(-2)}`
 };
