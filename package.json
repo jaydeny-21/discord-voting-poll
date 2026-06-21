@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Discord voting poll bot",
   "main": "index.js",
+  "type":"module",
   "scripts": {
     "start": "node index.js"
   },

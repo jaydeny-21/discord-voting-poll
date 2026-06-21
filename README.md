@@ -36,9 +36,10 @@ Jayden Ly
 
 ### 2. Get your IDs
 
-- **Client ID**: Found on the **General Information** tab of your application
+- **Client ID**: Found on the **General Information** tab -> **Application ID**
 - **Guild ID**: Right-click your Discord server icon → **Copy Server ID**
   *(Enable Developer Mode in Discord Settings → Advanced if you don't see this)*
+- Paste them into .env file
 
 
 ### 4. Install dependencies

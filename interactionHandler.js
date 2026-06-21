@@ -1,18 +1,17 @@
 // handlers/interactionHandler.js
 
-const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
-const { createPoll, getPoll, setMessageId, toggleVote, addOption } = require('./polls');
-const { buildPollEmbed, buildVoteRows, buildResultEmbed } = require('./embedBuilder');
-const MSG = require('./messages'); 
-const { MODAL_LABEL } = require('./messages');
+import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
+import * as polls from './polls.js';
+import * as embedBuilder from './embedBuilder.js';
+import MSG from './messages.js';
 const NUM_OPTIONS_UPFRONT = 3; // user can create up to 3 options upfront
 
 // Repost poll to the bottom of conversation
 async function repostPoll(interaction, poll, isEnded = false) {
   const channel = interaction.channel;
 
-  const embed = isEnded ? buildResultEmbed(poll) : buildPollEmbed(poll);
-  const rows  = isEnded ? [] : buildVoteRows(poll);
+  const embed = isEnded ? embedBuilder.buildResultEmbed(poll) : embedBuilder.buildPollEmbed(poll);
+  const rows  = isEnded ? [] : embedBuilder.buildVoteRows(poll);
 
   // Fetch old message first, then delete + send new one in parallel
   const oldMessage = await channel.messages.fetch(poll.messageId).catch(() => null);
@@ -21,10 +20,10 @@ async function repostPoll(interaction, poll, isEnded = false) {
     oldMessage ? oldMessage.delete().catch(() => null) : Promise.resolve(),
   ]);
 
-  setMessageId(poll.pollId, newMessage.id);
+  polls.setMessageId(poll.pollId, newMessage.id);
 }
 
-async function handleInteraction(interaction) {
+export async function handleInteraction(interaction) {
   try {
     // Slash Commands 
     if (interaction.isChatInputCommand()) {
@@ -85,7 +84,7 @@ async function handlePollCommand(interaction) {
 
   const displayName = interaction.member?.displayName || interaction.user.username;
 
-  const poll = createPoll({
+  const poll = polls.createPoll({
     question,
     options,
     creatorId:   interaction.user.id,
@@ -93,8 +92,8 @@ async function handlePollCommand(interaction) {
     channelId:   interaction.channelId,
   });
 
-  const embed = buildPollEmbed(poll);
-  const rows  = buildVoteRows(poll);
+  const embed = embedBuilder.buildPollEmbed(poll);
+  const rows  = embedBuilder.buildVoteRows(poll);
 
   const reply = await interaction.reply({
     embeds: [embed],
@@ -102,7 +101,7 @@ async function handlePollCommand(interaction) {
     fetchReply: true,
   });
 
-  setMessageId(poll.pollId, reply.id);
+  polls.setMessageId(poll.pollId, reply.id);
 }
 
 // Vote button 
@@ -110,13 +109,13 @@ async function handleVote(interaction, pollId, optionId) {
   // Acknowledge FIRST before any other logic
   await interaction.deferUpdate();
   
-  const poll = getPoll(pollId);
+  const poll = polls.getPoll(pollId);
   if (!poll) {
     return interaction.followUp({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
-  const result = toggleVote(pollId, optionId, interaction.user.id, displayName);
+  const result = polls.toggleVote(pollId, optionId, interaction.user.id, displayName);
 
   if (!result) {
     return interaction.followUp({ content: MSG.REPLY_OPTION_NOT_FOUND, ephemeral: true });
@@ -151,7 +150,7 @@ async function handleAddOptionModal(interaction, pollId) {
   
   const input = new TextInputBuilder()
   .setCustomId('option_label')
-  .setLabel(MODAL_LABEL)
+  .setLabel(MSG.MODAL_LABEL)
   .setStyle(TextInputStyle.Short)
   .setMaxLength(80)
   .setRequired(true);
@@ -160,13 +159,13 @@ async function handleAddOptionModal(interaction, pollId) {
   await interaction.showModal(modal);
 
   // Poll lookup AFTER modal is shown
-  const poll = getPoll(pollId);
+  const poll = polls.getPoll(pollId);
   if (!poll) return;
 }
 
 // Add option — handle modal submit 
 async function handleAddOptionSubmit(interaction, pollId) {
-  const poll = getPoll(pollId);
+  const poll = polls.getPoll(pollId);
   if (!poll) {
     return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
   }
@@ -177,7 +176,7 @@ async function handleAddOptionSubmit(interaction, pollId) {
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
-  const result = addOption(pollId, label, interaction.user.id, displayName);
+  const result = polls.addOption(pollId, label, interaction.user.id, displayName);
 
   if (result === 'duplicate') {
     return interaction.reply({ content: MSG.REPLY_DUPLICATE(label), ephemeral: true });
@@ -195,7 +194,7 @@ async function handleAddOptionSubmit(interaction, pollId) {
 async function handleEndPoll(interaction, pollId) {
   await interaction.deferUpdate();
 
-  const poll = getPoll(pollId);
+  const poll = polls.getPoll(pollId);
   if (!poll) {
     return interaction.followUp({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
   }
@@ -215,4 +214,3 @@ async function handleEndPoll(interaction, pollId) {
   await repostPoll(interaction, poll, true);
 }
 
-module.exports = { handleInteraction };

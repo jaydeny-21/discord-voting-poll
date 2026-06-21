@@ -1,15 +1,12 @@
 // embedBuilder.js — builds the Discord embed + action rows for a poll
 
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
-const { getTotalVotes } = require('./polls');
-const MSG = require('./messages'); 
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { getTotalVotes } from './polls.js';
+import MSG from './messages.js';
 
 // Discord brand colors
 const DISCORD_BLURPLE = 0x5865F2;
 const DISCORD_GREEN   = 0x57F287;
-const DISCORD_YELLOW  = 0xFEE75C;
-const DISCORD_FUCHSIA = 0xEB459E;
-const DISCORD_RED     = 0xED4245;
 const FILLED_BLOCK    = '\u2588';
 const UNFILLED_BLOCK  = '\u2591';
 
@@ -20,62 +17,53 @@ function makeBar(pct, length = 15) {
   return FILLED_BLOCK.repeat(filled) + UNFILLED_BLOCK.repeat(empty);
 }
 
+// Helper that ddd one field per option, ranked by vote count (descending) so the
+// highest-voted options appear first. Sorts a copy so poll.options keeps
+// its original order. `emptyLabel` is shown for options with no votes.
+function addOptionFields(embed, poll, total, emptyLabel) {
+  const ranked = [...poll.options].sort((a, b) => b.voters.size - a.voters.size);
 
-// Format current time as "Today at 6:01 PM"
-function getFormattedTime() {
-  const now = new Date();
-  let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12 || 12;
-  return MSG.DATE(hours, minutes, ampm);
+  ranked.forEach((opt, i) => {
+    const count = opt.voters.size;
+    const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
+    const bar   = makeBar(pct);
+    const names = count > 0 ? [...opt.voters.values()].join(', ') : emptyLabel;
+
+    embed.addFields({
+      name: MSG.ROW_OPTION_NAME(i, opt.label),
+      value: MSG.ROW_OPTION_VALUE(bar, pct, count, names),
+      inline: false,
+    });
+  });
 }
 
 // Build the main poll embed
-function buildPollEmbed(poll) {
+export function buildPollEmbed(poll) {
   const total = getTotalVotes(poll);
 
   const embed = new EmbedBuilder()
     .setColor(DISCORD_BLURPLE)
     .setTitle(`${poll.question}`)
     .setFooter({
-      text: MSG.FOOTER(total, poll.creatorName, getFormattedTime())
-    })
-
-
-  // Build each option as a field
-  poll.options.forEach((opt, i) => {
-    const count = opt.voters.size;
-    const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
-    const bar   = makeBar(pct);
-    const names = count > 0
-      ? [...opt.voters.values()].join(', ')
-      : MSG.NO_VOTES_YET;
-
-    embed.addFields({
-      name: MSG.ROW_OPTION_NAME(i, opt.label),
-      value: MSG.ROW_OPTION_VALUE(bar, pct, count,names),
-      inline: false,
+      text: MSG.FOOTER(total, poll.creatorName, MSG.DATE(poll.createdAt))
     });
-  });
+
+  addOptionFields(embed, poll, total, MSG.NO_VOTES_YET);
 
   return embed;
 }
 
 // Build vote buttons (one per option, up to 5 per row, max 25 total)
-function buildVoteRows(poll, userId = null) {
+export function buildVoteRows(poll) {
   const rows = [];
   let currentRow = new ActionRowBuilder();
   let btnCount = 0;
 
-  poll.options.forEach((opt, i) => {
+  poll.options.forEach((opt) => {
     if (btnCount > 0 && btnCount % 5 === 0) {
       rows.push(currentRow);
       currentRow = new ActionRowBuilder();
     }
-
-    // Cant display different button state for different user due to Discord's limitation
-    // const hasVoted = userId !== null && opt.voters.has(userId);
 
     currentRow.addComponents(
       new ButtonBuilder()
@@ -107,7 +95,7 @@ function buildVoteRows(poll, userId = null) {
 }
 
 // Build a compact result embed for ended polls
-function buildResultEmbed(poll) {
+export function buildResultEmbed(poll) {
   const total = getTotalVotes(poll);
 
   const maxVotes = Math.max(...poll.options.map(o => o.voters.size));
@@ -121,24 +109,13 @@ function buildResultEmbed(poll) {
         ? MSG.NO_VOTES_CAST
         : MSG.RESULT_WINNERS(winners, maxVotes)
     )
-    .setFooter({ 
-      text: MSG.FOOTER(total, poll.creatorName, getFormattedTime())
-    })
-
-  poll.options.forEach((opt, i) => {
-    const count = opt.voters.size;
-    const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
-    const bar   = makeBar(pct);
-    const names = count > 0 ? [...opt.voters.values()].join(', ') : MSG.NO_VOTES;
-
-    embed.addFields({
-      name: MSG.ROW_OPTION_NAME(i, opt.label),
-      value: MSG.ROW_OPTION_VALUE(bar, pct, count,names),
-      inline: false,
+    .setFooter({
+      text: MSG.FOOTER(total, poll.creatorName, MSG.DATE(poll.createdAt))
     });
-  });
+
+  addOptionFields(embed, poll, total, MSG.NO_VOTES);
 
   return embed;
 }
 
-module.exports = { buildPollEmbed, buildVoteRows, buildResultEmbed };
+

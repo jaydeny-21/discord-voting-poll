@@ -1,7 +1,7 @@
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const { token } = require('./config');
-const { handleInteraction } = require('./interactionHandler');
-const { registerCommands } = require('./deploy-commands');
+import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { token } from './config.js';
+import { handleInteraction } from './interactionHandler.js';
+import { registerCommands } from './deploy-commands.js';
 
 const client = new Client({
   intents: [
@@ -13,8 +13,15 @@ const client = new Client({
 client.once('ready', async () => {
   console.log(` Logged in as ${client.user.tag}`);
   console.log(` Registering slash commands...`);
-  await registerCommands();
-  console.log(`  Poll Bot is ready!`);
+  
+  try {
+    await registerCommands();
+    console.log(`Poll Bot is ready!`);
+  } catch (error) {
+    console.error('Failed to register slash commands:', error);
+    process.exit(1);
+  }
+
 });
 
 client.on('interactionCreate', handleInteraction);

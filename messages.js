@@ -1,6 +1,6 @@
 // messages.js — all display text and reply messages used across the bot
 
-module.exports = {
+const MSG = {
 
   //  Poll embed text 
   NO_VOTES_YET:     '_No votes yet_',
@@ -21,8 +21,8 @@ module.exports = {
   REPLY_EMPTY_OPTION:     'My friend, option label cannot be empty 🙂',
   REPLY_DUPLICATE:        (label) => `Wake up, option ***${label}*** already exists 😆`,
   REPLY_OPTION_ADDED:     (displayName, label) => `Look, **${displayName}** just added ***${label}*** to the poll 👀`,
-  REPLY_VOTE_ADDED:       (displayName, label) => `✅ **${displayName}** voted for ***${label}***!`,
-  REPLY_VOTE_REMOVED:     (displayName, label) => `🗑️ **${displayName}** removed your vote from **${label}**.`,
+  REPLY_VOTE_ADDED:       (displayName, label) => `✅ **${displayName}** voted for ***${label}***`,
+  REPLY_VOTE_REMOVED:     (displayName, label) => `🗑️ **${displayName}** removed your vote from **${label}**`,
   REPLY_GENERIC_ERROR:    'Something went wrong. Please try again 😔',
   CONFIRM_OPTION_ADDED:   'Option added!',
 
@@ -38,5 +38,7 @@ module.exports = {
   ROW_OPTION_VALUE:       (bar, pct, count, names) => `${bar}\u2002 **${pct}%**\u2002•\u2002(${count})\n*${names}*`,
 
   // Date   Today at 6:01 PM
-  DATE:                   (hours, minutes, ampm) => `Today at ${hours}:${minutes} ${ampm}`
+  DATE:                   (date) => `Created on  ${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear().toString().slice(-2)}`
 };
+
+export default MSG;
