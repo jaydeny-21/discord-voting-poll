@@ -1,7 +1,7 @@
 // deploy-commands.js — registers /poll slash command with Discord
 
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');
-const { token, clientId, guildId } = require('./config');
+import { REST, Routes, SlashCommandBuilder } from 'discord.js';
+import * as config from './config.js';
 
 const commands = [
   new SlashCommandBuilder()
@@ -29,11 +29,11 @@ const commands = [
     .toJSON(),
 ];
 
-async function registerCommands() {
-  const rest = new REST({ version: '10' }).setToken(token);
+export async function registerCommands() {
+  const rest = new REST({ version: '10' }).setToken(config.token);
   try {
     await rest.put(
-      Routes.applicationGuildCommands(clientId, guildId),
+      Routes.applicationGuildCommands(config.clientId, config.guildId),
       { body: commands }
     );
     console.log(' Slash commands registered successfully.');
@@ -42,4 +42,4 @@ async function registerCommands() {
   }
 }
 
-module.exports = { registerCommands };
+

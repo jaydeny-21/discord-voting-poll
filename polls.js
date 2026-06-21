@@ -16,7 +16,7 @@
 const polls = new Map();
 let counter = 1;
 
-function createPoll({ question, options, creatorId, creatorName, channelId }) {
+export function createPoll({ question, options, creatorId, creatorName, channelId }) {
   const pollId = `poll_${counter++}`;
   const poll = {
     pollId,
@@ -36,16 +36,16 @@ function createPoll({ question, options, creatorId, creatorName, channelId }) {
   return poll;
 }
 
-function getPoll(pollId) {
+export function getPoll(pollId) {
   return polls.get(pollId) || null;
 }
 
-function setMessageId(pollId, messageId) {
+export function setMessageId(pollId, messageId) {
   const poll = polls.get(pollId);
   if (poll) poll.messageId = messageId;
 }
 
-function toggleVote(pollId, optionId, userId, displayName) {
+export function toggleVote(pollId, optionId, userId, displayName) {
   const poll = polls.get(pollId);
   if (!poll) return null;
 
@@ -61,7 +61,7 @@ function toggleVote(pollId, optionId, userId, displayName) {
   }
 }
 
-function addOption(pollId, label, userId, displayName) {
+export function addOption(pollId, label, userId, displayName) {
   const poll = polls.get(pollId);
   if (!poll) return null;
 
@@ -78,8 +78,8 @@ function addOption(pollId, label, userId, displayName) {
   return newOpt;
 }
 
-function getTotalVotes(poll) {
+export function getTotalVotes(poll) {
   return poll.options.reduce((sum, o) => sum + o.voters.size, 0);
 }
 
-module.exports = { createPoll, getPoll, setMessageId, toggleVote, addOption, getTotalVotes };
+

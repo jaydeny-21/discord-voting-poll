@@ -1,8 +1,8 @@
 // embedBuilder.js — builds the Discord embed + action rows for a poll
 
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { getTotalVotes } = require('./polls');
-const MSG = require('./messages');
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { getTotalVotes } from './polls.js';
+import MSG from './messages.js';
 
 // Discord brand colors
 const DISCORD_BLURPLE = 0x5865F2;
@@ -38,7 +38,7 @@ function addOptionFields(embed, poll, total, emptyLabel) {
 }
 
 // Build the main poll embed
-function buildPollEmbed(poll) {
+export function buildPollEmbed(poll) {
   const total = getTotalVotes(poll);
 
   const embed = new EmbedBuilder()
@@ -54,7 +54,7 @@ function buildPollEmbed(poll) {
 }
 
 // Build vote buttons (one per option, up to 5 per row, max 25 total)
-function buildVoteRows(poll) {
+export function buildVoteRows(poll) {
   const rows = [];
   let currentRow = new ActionRowBuilder();
   let btnCount = 0;
@@ -95,7 +95,7 @@ function buildVoteRows(poll) {
 }
 
 // Build a compact result embed for ended polls
-function buildResultEmbed(poll) {
+export function buildResultEmbed(poll) {
   const total = getTotalVotes(poll);
 
   const maxVotes = Math.max(...poll.options.map(o => o.voters.size));
@@ -118,4 +118,4 @@ function buildResultEmbed(poll) {
   return embed;
 }
 
-module.exports = { buildPollEmbed, buildVoteRows, buildResultEmbed };
+

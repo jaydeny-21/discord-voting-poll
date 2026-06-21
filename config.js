@@ -1,4 +1,4 @@
-const dotenv = require('dotenv')
+import dotenv from 'dotenv'
 
 // Load .env file into process.env
 dotenv.config()
@@ -12,15 +12,15 @@ function getEnv(key) {
   return value
 }
 
-const config = {
-  // Your bot token from Discord Developer Portal
-  token: getEnv('TOKEN'),
 
-  // Your application/client ID from Discord Developer Portal
-  clientId: getEnv('CLIENT_ID'),
+// Your bot token from Discord Developer Portal
+export const token = getEnv('TOKEN');
 
-  // Your Discord server (guild) ID — right-click your server icon → Copy Server ID
-  guildId: getEnv('GUILD_ID'),
-};
+// Your application/client ID from Discord Developer Portal
+export const clientId = getEnv('CLIENT_ID');
 
-module.exports =  config
+// Your Discord server (guild) ID — right-click your server icon → Copy Server ID
+export const guildId = getEnv('GUILD_ID');
+
+
+

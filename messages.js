@@ -1,6 +1,6 @@
 // messages.js — all display text and reply messages used across the bot
 
-module.exports = {
+const MSG = {
 
   //  Poll embed text 
   NO_VOTES_YET:     '_No votes yet_',
@@ -40,3 +40,5 @@ module.exports = {
   // Date   Today at 6:01 PM
   DATE:                   (date) => `Created on  ${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear().toString().slice(-2)}`
 };
+
+export default MSG;

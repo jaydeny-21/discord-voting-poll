@@ -1,7 +1,7 @@
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const { token } = require('./config');
-const { handleInteraction } = require('./interactionHandler');
-const { registerCommands } = require('./deploy-commands');
+import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { token } from './config.js';
+import { handleInteraction } from './interactionHandler.js';
+import { registerCommands } from './deploy-commands.js';
 
 const client = new Client({
   intents: [
