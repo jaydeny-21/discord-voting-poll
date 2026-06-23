@@ -10,7 +10,7 @@ const client = new Client({
   ],
 });
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   console.log(` Logged in as ${client.user.tag}`);
   console.log(` Registering slash commands...`);
   
