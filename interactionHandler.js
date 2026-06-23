@@ -6,8 +6,38 @@ import * as embedBuilder from './embedBuilder.js';
 import MSG from './messages.js';
 const NUM_OPTIONS_UPFRONT = 3; // user can create up to 3 options upfront
 
-// Repost poll to the bottom of conversation
-async function repostPoll(interaction, poll, isEnded = false) {
+// Per-poll lock: tracks the latest in-flight repost for each poll so reposts
+// on the SAME poll run one-at-a-time. This prevents the duplicate-message race
+// when several people interact at the same instant. Different polls still run
+// in parallel.
+const repostQueues = new Map();
+
+// Repost poll to the bottom of conversation.
+// Chains this repost behind any repost already running for the same poll, so
+// the next one only starts after the previous one has updated poll.messageId.
+function repostPoll(interaction, poll, isEnded = false) {
+  const previous = repostQueues.get(poll.pollId) || Promise.resolve();
+
+  // .catch first so one failed repost doesn't block the rest of the queue
+  const next = previous
+    .catch(() => {})
+    .then(() => doRepost(interaction, poll, isEnded));
+
+  repostQueues.set(poll.pollId, next);
+
+  // Drop the entry once this is the last repost in the chain (keeps the Map small)
+  next.finally(() => {
+    if (repostQueues.get(poll.pollId) === next) {
+      repostQueues.delete(poll.pollId);
+    }
+  });
+
+  return next;
+}
+
+// Does the actual delete-old + send-new work. Reads poll.messageId at call time,
+// which is now always current because reposts are serialized by repostPoll().
+async function doRepost(interaction, poll, isEnded = false) {
   const channel = interaction.channel;
 
   const embed = isEnded ? embedBuilder.buildResultEmbed(poll) : embedBuilder.buildPollEmbed(poll);
