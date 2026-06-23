@@ -22,7 +22,7 @@ const commands = [
     .addStringOption(o =>
       o.setName('option2')
        .setDescription('Option 2')
-       .setRequired(true)
+       .setRequired(false)
        .setMaxLength(80)
     )
     .addStringOption(o => o.setName('option3').setDescription('Option 3 (Add more later)').setMaxLength(80))

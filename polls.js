@@ -78,8 +78,31 @@ export function addOption(pollId, label, userId, displayName) {
   return newOpt;
 }
 
+export function editOption(pollId, optionId, newLabel) {
+  const poll = polls.get(pollId);
+  if (!poll) return null;
+
+  const option = poll.options.find(o => o.id === optionId);
+  if (!option) return 'not_found';
+
+  // Prevent duplicate labels (case-insensitive), ignoring the option being edited
+  const exists = poll.options.some(
+    o => o.id !== optionId && o.label.toLowerCase() === newLabel.toLowerCase()
+  );
+  if (exists) return 'duplicate';
+
+  option.label = newLabel;
+  return option;
+}
+
 export function getTotalVotes(poll) {
   return poll.options.reduce((sum, o) => sum + o.voters.size, 0);
+}
+
+// Options sorted by vote count (descending). Returns a copy, so poll.options
+// keeps its original order. Ties keep creation order (stable sort).
+export function rankedOptions(poll) {
+  return [...poll.options].sort((a, b) => b.voters.size - a.voters.size);
 }
 
 
