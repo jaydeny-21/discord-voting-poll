@@ -1,6 +1,6 @@
 // handlers/interactionHandler.js
 
-import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
+import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
 import * as polls from './polls.js';
 import * as embedBuilder from './embedBuilder.js';
 import MSG from './messages.js';
@@ -23,6 +23,13 @@ async function repostPoll(interaction, poll, isEnded = false) {
   polls.setMessageId(poll.pollId, newMessage.id);
 }
 
+// Only the poll creator or a server admin (ManageMessages) may manage a poll
+function canManagePoll(interaction, poll) {
+  const isCreator = interaction.user.id === poll.creatorId;
+  const isAdmin   = interaction.member?.permissions?.has('ManageMessages');
+  return isCreator || isAdmin;
+}
+
 export async function handleInteraction(interaction) {
   try {
     // Slash Commands 
@@ -41,8 +48,19 @@ export async function handleInteraction(interaction) {
         await handleVote(interaction, pollId, optionId);
       } else if (action === 'addoption') {
         await handleAddOptionModal(interaction, pollId);
+      } else if (action === 'editoption') {
+        await handleEditOptionSelect(interaction, pollId);
       } else if (action === 'endpoll') {
         await handleEndPoll(interaction, pollId);
+      }
+      return;
+    }
+
+    // Select Menus
+    if (interaction.isStringSelectMenu()) {
+      const [action, pollId] = interaction.customId.split('__');
+      if (action === 'editselect') {
+        await handleEditOptionChosen(interaction, pollId);
       }
       return;
     }
@@ -52,6 +70,9 @@ export async function handleInteraction(interaction) {
       if (interaction.customId.startsWith('addoption_modal__')) {
         const pollId = interaction.customId.replace('addoption_modal__', '');
         await handleAddOptionSubmit(interaction, pollId);
+      } else if (interaction.customId.startsWith('editoption_modal__')) {
+        const [, pollId, optionId] = interaction.customId.split('__');
+        await handleEditOptionSubmit(interaction, pollId, optionId);
       }
       return;
     }
@@ -200,17 +221,109 @@ async function handleEndPoll(interaction, pollId) {
   }
 
   // Only the poll creator or admins can end it
-  const isCreator = interaction.user.id === poll.creatorId;
-  const isAdmin   = interaction.member?.permissions?.has('ManageMessages');
-
-  if (!isCreator && !isAdmin) {
+  if (!canManagePoll(interaction, poll)) {
     return interaction.followUp({
       content: MSG.REPLY_NOT_CREATOR,
       ephemeral: true,
     });
   }
 
-  
+
   await repostPoll(interaction, poll, true);
+}
+
+// Edit option — show the list of current options to pick from
+async function handleEditOptionSelect(interaction, pollId) {
+  const poll = polls.getPoll(pollId);
+  if (!poll) {
+    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
+  }
+
+  // Only the poll creator or admins can edit
+  if (!canManagePoll(interaction, poll)) {
+    return interaction.reply({ content: MSG.REPLY_NOT_ALLOWED_EDIT, ephemeral: true });
+  }
+
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId(`editselect__${pollId}`)
+    .setPlaceholder(MSG.EDIT_SELECT_PLACEHOLDER)
+    .addOptions(
+      poll.options.map(o => ({
+        label: o.label.slice(0, 100), // Discord caps select labels at 100 chars
+        value: o.id,
+      }))
+    );
+
+  const row = new ActionRowBuilder().addComponents(menu);
+
+  // Ephemeral so only the editor sees the picker
+  await interaction.reply({
+    content: MSG.REPLY_CHOOSE_OPTION,
+    components: [row],
+    ephemeral: true,
+  });
+}
+
+// Edit option — an option was chosen, show a modal pre-filled with its current text
+async function handleEditOptionChosen(interaction, pollId) {
+  const optionId = interaction.values[0];
+
+  const poll = polls.getPoll(pollId);
+  if (!poll) {
+    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
+  }
+
+  const option = poll.options.find(o => o.id === optionId);
+  if (!option) {
+    return interaction.reply({ content: MSG.REPLY_OPTION_NOT_FOUND, ephemeral: true });
+  }
+
+  const modal = new ModalBuilder()
+    .setCustomId(`editoption_modal__${pollId}__${optionId}`)
+    .setTitle(MSG.EDIT_MODAL_TITLE);
+
+  const input = new TextInputBuilder()
+    .setCustomId('new_label')
+    .setLabel(MSG.EDIT_MODAL_LABEL)
+    .setStyle(TextInputStyle.Short)
+    .setMaxLength(80)
+    .setRequired(true)
+    .setValue(option.label); // pre-fill with the current text
+
+  modal.addComponents(new ActionRowBuilder().addComponents(input));
+  await interaction.showModal(modal);
+}
+
+// Edit option — handle modal submit, update the label and repost
+async function handleEditOptionSubmit(interaction, pollId, optionId) {
+  const poll = polls.getPoll(pollId);
+  if (!poll) {
+    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
+  }
+
+  const option = poll.options.find(o => o.id === optionId);
+  const oldLabel = option?.label;
+
+  const newLabel = interaction.fields.getTextInputValue('new_label').trim();
+  if (!newLabel) {
+    return interaction.reply({ content: MSG.REPLY_EMPTY_OPTION, ephemeral: true });
+  }
+
+  const result = polls.editOption(pollId, optionId, newLabel);
+  if (result === 'not_found') {
+    return interaction.reply({ content: MSG.REPLY_OPTION_NOT_FOUND, ephemeral: true });
+  }
+  if (result === 'duplicate') {
+    return interaction.reply({ content: MSG.REPLY_DUPLICATE(newLabel), ephemeral: true });
+  }
+
+  const displayName = interaction.member?.displayName || interaction.user.username;
+
+  // Respond to Discord immediately to prevent "Something went wrong"
+  await interaction.reply({ content: MSG.CONFIRM_OPTION_EDITED, ephemeral: true });
+
+  // Repost the poll, bring it to the bottom of convo
+  await repostPoll(interaction, poll);
+  await interaction.channel.send(MSG.REPLY_OPTION_EDITED(displayName, oldLabel, newLabel));
 }
 

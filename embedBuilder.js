@@ -84,6 +84,10 @@ export function buildVoteRows(poll) {
         .setLabel(MSG.BTN_ADD_OPTION)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
+        .setCustomId(`editoption__${poll.pollId}`)
+        .setLabel(MSG.BTN_EDIT_OPTION)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
         .setCustomId(`endpoll__${poll.pollId}`)
         .setLabel(MSG.BTN_END_POLL)
         .setStyle(ButtonStyle.Danger)

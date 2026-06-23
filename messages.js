@@ -11,6 +11,7 @@ const MSG = {
 
   //  Button labels 
   BTN_ADD_OPTION:   'Add option',
+  BTN_EDIT_OPTION:  'Edit option ',
   BTN_END_POLL:     'End poll',
 
   //  Interaction replies 
@@ -22,9 +23,12 @@ const MSG = {
   REPLY_DUPLICATE:        (label) => `Wake up, option ***${label}*** already exists 😆`,
   REPLY_OPTION_ADDED:     (displayName, label) => `Look, **${displayName}** just added ***${label}*** to the poll 👀`,
   REPLY_VOTE_ADDED:       (displayName, label) => `✅ **${displayName}** voted for ***${label}***`,
-  REPLY_VOTE_REMOVED:     (displayName, label) => `🗑️ **${displayName}** removed your vote from **${label}**`,
+  REPLY_OPTION_EDITED:    (displayName, oldLabel, newLabel) => `✏️ **${displayName}** renamed option ***${oldLabel}*** \u2002➡️\u2002 ***${newLabel}***`,
   REPLY_GENERIC_ERROR:    'Something went wrong. Please try again 😔',
   CONFIRM_OPTION_ADDED:   'Option added!',
+  CONFIRM_OPTION_EDITED:  'Option updated!',
+  REPLY_NOT_ALLOWED_EDIT: 'Only the poll creator or an admin can edit options 🙂',
+  REPLY_CHOOSE_OPTION:    'Which option would you like to edit? ✏️',
 
   //  Modal text 
   MODAL_TITLE:            'Tell us about your option 😃',
