@@ -99,4 +99,10 @@ export function getTotalVotes(poll) {
   return poll.options.reduce((sum, o) => sum + o.voters.size, 0);
 }
 
+// Options sorted by vote count (descending). Returns a copy, so poll.options
+// keeps its original order. Ties keep creation order (stable sort).
+export function rankedOptions(poll) {
+  return [...poll.options].sort((a, b) => b.voters.size - a.voters.size);
+}
+
 

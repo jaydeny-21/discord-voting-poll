@@ -244,11 +244,15 @@ async function handleEditOptionSelect(interaction, pollId) {
     return interaction.reply({ content: MSG.REPLY_NOT_ALLOWED_EDIT, flags: MessageFlags.Ephemeral });
   }
 
+  // Match the poll's displayed order: ranked by vote count (descending).
+  // Sort a copy so poll.options keeps its original order.
+  const ranked = polls.rankedOptions(poll);
+
   const menu = new StringSelectMenuBuilder()
     .setCustomId(`editselect__${pollId}`)
     .setPlaceholder(MSG.EDIT_SELECT_PLACEHOLDER)
     .addOptions(
-      poll.options.map(o => ({
+      ranked.map(o => ({
         label: o.label.slice(0, 100), // Discord caps select labels at 100 chars
         value: o.id,
       }))

@@ -1,7 +1,7 @@
 // embedBuilder.js — builds the Discord embed + action rows for a poll
 
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { getTotalVotes } from './polls.js';
+import { getTotalVotes, rankedOptions } from './polls.js';
 import MSG from './messages.js';
 
 // Discord brand colors
@@ -21,7 +21,7 @@ function makeBar(pct, length = 15) {
 // highest-voted options appear first. Sorts a copy so poll.options keeps
 // its original order. `emptyLabel` is shown for options with no votes.
 function addOptionFields(embed, poll, total, emptyLabel) {
-  const ranked = [...poll.options].sort((a, b) => b.voters.size - a.voters.size);
+  const ranked = rankedOptions(poll);
 
   ranked.forEach((opt, i) => {
     const count = opt.voters.size;
@@ -59,7 +59,8 @@ export function buildVoteRows(poll) {
   let currentRow = new ActionRowBuilder();
   let btnCount = 0;
 
-  poll.options.forEach((opt) => {
+  // Order buttons by vote count so they match the embed fields and edit menu
+  rankedOptions(poll).forEach((opt) => {
     if (btnCount > 0 && btnCount % 5 === 0) {
       rows.push(currentRow);
       currentRow = new ActionRowBuilder();
