@@ -1,6 +1,6 @@
 // handlers/interactionHandler.js
 
-import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
+import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } from 'discord.js';
 import * as polls from './polls.js';
 import * as embedBuilder from './embedBuilder.js';
 import MSG from './messages.js';
@@ -79,7 +79,7 @@ export async function handleInteraction(interaction) {
 
   } catch (err) {
     console.error('Interaction error:', err);
-    const msg = { content: MSG.REPLY_GENERIC_ERROR, ephemeral: true };
+    const msg = { content: MSG.REPLY_GENERIC_ERROR, flags: MessageFlags.Ephemeral };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(msg).catch(() => {});
     } else {
@@ -100,7 +100,7 @@ async function handlePollCommand(interaction) {
   }
 
   if (options.length < 2) {
-    return interaction.reply({ content: MSG.REPLY_MIN_OPTIONS, ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_MIN_OPTIONS, flags: MessageFlags.Ephemeral });
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
@@ -116,7 +116,7 @@ async function handlePollCommand(interaction) {
   const embed = embedBuilder.buildPollEmbed(poll);
   const rows  = embedBuilder.buildVoteRows(poll);
 
-  const reply = await interaction.reply({
+  const response = await interaction.reply({
     embeds: [embed],
     components: rows,
     withResponse: true,
@@ -132,14 +132,14 @@ async function handleVote(interaction, pollId, optionId) {
   
   const poll = polls.getPoll(pollId);
   if (!poll) {
-    return interaction.followUp({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
+    return interaction.followUp({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
   const result = polls.toggleVote(pollId, optionId, interaction.user.id, displayName);
 
   if (!result) {
-    return interaction.followUp({ content: MSG.REPLY_OPTION_NOT_FOUND, ephemeral: true });
+    return interaction.followUp({ content: MSG.REPLY_OPTION_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
 
   // const embed = buildPollEmbed(poll);
@@ -188,23 +188,23 @@ async function handleAddOptionModal(interaction, pollId) {
 async function handleAddOptionSubmit(interaction, pollId) {
   const poll = polls.getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
 
   const label = interaction.fields.getTextInputValue('option_label').trim();
   if (!label) {
-    return interaction.reply({ content: MSG.REPLY_EMPTY_OPTION, ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_EMPTY_OPTION, flags: MessageFlags.Ephemeral });
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
   const result = polls.addOption(pollId, label, interaction.user.id, displayName);
 
   if (result === 'duplicate') {
-    return interaction.reply({ content: MSG.REPLY_DUPLICATE(label), ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_DUPLICATE(label), flags: MessageFlags.Ephemeral });
   }
 
   // Respond to Discord immediately to prevent "Something went wrong" 
-  await interaction.reply({ content: MSG.CONFIRM_OPTION_ADDED, ephemeral: true });
+  await interaction.reply({ content: MSG.CONFIRM_OPTION_ADDED, flags: MessageFlags.Ephemeral });
 
   // Repost the poll, bring it to the bottom of convo
   await repostPoll(interaction, poll);
@@ -217,14 +217,14 @@ async function handleEndPoll(interaction, pollId) {
 
   const poll = polls.getPoll(pollId);
   if (!poll) {
-    return interaction.followUp({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
+    return interaction.followUp({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
 
   // Only the poll creator or admins can end it
   if (!canManagePoll(interaction, poll)) {
     return interaction.followUp({
       content: MSG.REPLY_NOT_CREATOR,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -236,12 +236,12 @@ async function handleEndPoll(interaction, pollId) {
 async function handleEditOptionSelect(interaction, pollId) {
   const poll = polls.getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
 
   // Only the poll creator or admins can edit
   if (!canManagePoll(interaction, poll)) {
-    return interaction.reply({ content: MSG.REPLY_NOT_ALLOWED_EDIT, ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_NOT_ALLOWED_EDIT, flags: MessageFlags.Ephemeral });
   }
 
   const menu = new StringSelectMenuBuilder()
@@ -260,7 +260,7 @@ async function handleEditOptionSelect(interaction, pollId) {
   await interaction.reply({
     content: MSG.REPLY_CHOOSE_OPTION,
     components: [row],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 
@@ -270,12 +270,12 @@ async function handleEditOptionChosen(interaction, pollId) {
 
   const poll = polls.getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
 
   const option = poll.options.find(o => o.id === optionId);
   if (!option) {
-    return interaction.reply({ content: MSG.REPLY_OPTION_NOT_FOUND, ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_OPTION_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
 
   const modal = new ModalBuilder()
@@ -298,7 +298,7 @@ async function handleEditOptionChosen(interaction, pollId) {
 async function handleEditOptionSubmit(interaction, pollId, optionId) {
   const poll = polls.getPoll(pollId);
   if (!poll) {
-    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
 
   const option = poll.options.find(o => o.id === optionId);
@@ -306,21 +306,21 @@ async function handleEditOptionSubmit(interaction, pollId, optionId) {
 
   const newLabel = interaction.fields.getTextInputValue('new_label').trim();
   if (!newLabel) {
-    return interaction.reply({ content: MSG.REPLY_EMPTY_OPTION, ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_EMPTY_OPTION, flags: MessageFlags.Ephemeral });
   }
 
   const result = polls.editOption(pollId, optionId, newLabel);
   if (result === 'not_found') {
-    return interaction.reply({ content: MSG.REPLY_OPTION_NOT_FOUND, ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_OPTION_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
   if (result === 'duplicate') {
-    return interaction.reply({ content: MSG.REPLY_DUPLICATE(newLabel), ephemeral: true });
+    return interaction.reply({ content: MSG.REPLY_DUPLICATE(newLabel), flags: MessageFlags.Ephemeral });
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
 
   // Respond to Discord immediately to prevent "Something went wrong"
-  await interaction.reply({ content: MSG.CONFIRM_OPTION_EDITED, ephemeral: true });
+  await interaction.reply({ content: MSG.CONFIRM_OPTION_EDITED, flags: MessageFlags.Ephemeral });
 
   // Repost the poll, bring it to the bottom of convo
   await repostPoll(interaction, poll);
