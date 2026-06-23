@@ -21,6 +21,7 @@ const MSG = {
   REPLY_NOT_CREATOR:      'Im sorry, but you can\'t end something you never created ...🙂‍↔️',
   REPLY_EMPTY_OPTION:     'My friend, option label cannot be empty 🙂',
   REPLY_DUPLICATE:        (label) => `Wake up, option ***${label}*** already exists 😆`,
+  REPLY_INITIAL_DUPLICATE:(label) => `Poll can't be created, some options are duplicated 🙂‍↔️: ***${label}***`,
   REPLY_OPTION_ADDED:     (displayName, label) => `📥 **${displayName}** added new option ***${label}***`,
   REPLY_VOTE_ADDED:       (displayName, label) => `✅ **${displayName}** voted for ***${label}***`,
   REPLY_VOTE_REMOVED:     (displayName, label) => `🗑️ **${displayName}** removed their vote from ***${label}***`,

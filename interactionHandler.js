@@ -99,8 +99,18 @@ async function handlePollCommand(interaction) {
     if (val) options.push(val.trim());
   }
 
-  if (options.length < 2) {
-    return interaction.reply({ content: MSG.REPLY_MIN_OPTIONS, flags: MessageFlags.Ephemeral });
+  // if (options.length < 2) {
+  //   return interaction.reply({ content: MSG.REPLY_MIN_OPTIONS, flags: MessageFlags.Ephemeral });
+  // }
+
+  // Reject duplicate options (case-insensitive), same rule as the Add option button
+  const seen = new Set();
+  for (const opt of options) {
+    const key = opt.toLowerCase();
+    if (seen.has(key)) {
+      return interaction.reply({ content: MSG.REPLY_INITIAL_DUPLICATE(opt), flags: MessageFlags.Ephemeral });
+    }
+    seen.add(key);
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
