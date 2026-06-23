@@ -119,10 +119,10 @@ async function handlePollCommand(interaction) {
   const reply = await interaction.reply({
     embeds: [embed],
     components: rows,
-    fetchReply: true,
+    withResponse: true,
   });
 
-  polls.setMessageId(poll.pollId, reply.id);
+  polls.setMessageId(poll.pollId, response.resource.message.id);
 }
 
 // Vote button 
