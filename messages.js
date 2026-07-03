@@ -16,7 +16,7 @@ const MSG = {
 
   //  Interaction replies 
   REPLY_MIN_OPTIONS:      'Could you provide at least **2 options** 😁?',
-  REPLY_POLL_NOT_FOUND:   'Sorry, I couldn\'t find the poll 😔',
+  REPLY_POLL_NOT_FOUND:   'Sorry, something went wrong with this poll 😔',
   REPLY_OPTION_NOT_FOUND: 'Sorry, I couldn\'t find the option 😔',
   REPLY_NOT_CREATOR:      'Im sorry, but you can\'t end something you never created ...🙂‍↔️',
   REPLY_EMPTY_OPTION:     'My friend, option label cannot be empty 🙂',

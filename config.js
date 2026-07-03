@@ -22,5 +22,8 @@ export const clientId = getEnv('CLIENT_ID');
 // Your Discord server (guild) ID — right-click your server icon → Copy Server ID
 export const guildId = getEnv('GUILD_ID');
 
+// Postgres connection string, e.g. postgres://user:pass@localhost:5432/pollbot
+export const databaseUrl = getEnv('DATABASE_URL');
+
 
 
