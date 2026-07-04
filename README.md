@@ -129,11 +129,11 @@ sudo -u postgres psql
 ```
 Then, inside psql (use your own password):
 ```sql
-CREATE DATABASE pollbot;
-CREATE USER pollbot WITH ENCRYPTED PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE pollbot TO pollbot;
-\c pollbot
-GRANT ALL ON SCHEMA public TO pollbot;
+CREATE DATABASE churchpollbot;
+CREATE USER churchpollbot WITH ENCRYPTED PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE churchpollbot TO churchpollbot;
+\c churchpollbot
+GRANT ALL ON SCHEMA public TO churchpollbot;
 \q
 ```
 
@@ -155,11 +155,11 @@ nano .env
 TOKEN=your_discord_bot_token
 CLIENT_ID=your_client_id
 GUILD_ID=your_server_id
-DATABASE_URL=postgres://pollbot:your_password@localhost:5432/pollbot
+DATABASE_URL=postgres://churchpollbot:your_password@localhost:5432/churchpollbot
 ```
 
 ### 7. Run it as a systemd service
-Create `/etc/systemd/system/pollbot.service`:
+Create `/etc/systemd/system/churchpollbot.service`:
 ```ini
 [Unit]
 Description=Discord Church Poll Bot
@@ -180,9 +180,9 @@ WantedBy=multi-user.target
 Enable and start it:
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable pollbot    # start on boot
-sudo systemctl start pollbot     # start now
-sudo systemctl status pollbot    # check it's "active (running)"
+sudo systemctl enable churchpollbot    # start on boot
+sudo systemctl start churchpollbot     # start now
+sudo systemctl status churchpollbot    # check it's "active (running)"
 ```
 
 > Only **one** process may run a given bot token at a time. If the bot also runs
@@ -219,19 +219,19 @@ cd ~/discord-voting-poll
 git checkout main
 git pull origin main
 npm install                          # only needed if dependencies changed
-sudo systemctl restart pollbot       # apply the update
-journalctl -u pollbot -f             # watch logs to confirm it started
+sudo systemctl restart churchpollbot       # apply the update
+journalctl -u churchpollbot -f             # watch logs to confirm it started
 ```
 
 ### Handy service commands
 
 | Task | Command |
 |------|---------|
-| Restart after an update | `sudo systemctl restart pollbot` |
-| Stop the bot | `sudo systemctl stop pollbot` |
-| Start the bot | `sudo systemctl start pollbot` |
-| Check status | `sudo systemctl status pollbot` |
-| View live logs | `journalctl -u pollbot -f` |
+| Restart after an update | `sudo systemctl restart churchpollbot` |
+| Stop the bot | `sudo systemctl stop churchpollbot` |
+| Start the bot | `sudo systemctl start churchpollbot` |
+| Check status | `sudo systemctl status churchpollbot` |
+| View live logs | `journalctl -u churchpollbot -f` |
 
 ## File Structure
 
@@ -265,7 +265,7 @@ Your token in config.js has a typo or extra space — reset it and copy again ca
 
 ### Buttons not responding / bot crashes on click
 
-Check the logs (`journalctl -u pollbot -f`) for the error message — it will tell you exactly which line
+Check the logs (`journalctl -u churchpollbot -f`) for the error message — it will tell you exactly which line
 If a poll stops responding, confirm the bot can reach PostgreSQL (check `DATABASE_URL` in `.env` and that the `postgresql` service is running: `sudo systemctl status postgresql`)
 
 ### Bot posts the embed but buttons do nothing
