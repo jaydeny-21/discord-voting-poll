@@ -14,30 +14,34 @@ const repostQueues = new Map();
 
 // Repost poll to the bottom of conversation.
 // Chains this repost behind any repost already running for the same poll, so
-// the next one only starts after the previous one has updated poll.messageId.
-function repostPoll(interaction, poll, isEnded = false) {
-  const previous = repostQueues.get(poll.pollId) || Promise.resolve();
+// the next one only starts after the previous one has updated the message id.
+function repostPoll(interaction, pollId, isEnded = false) {
+  const previous = repostQueues.get(pollId) || Promise.resolve();
 
   // .catch first so one failed repost doesn't block the rest of the queue
   const next = previous
     .catch(() => {})
-    .then(() => doRepost(interaction, poll, isEnded));
+    .then(() => doRepost(interaction, pollId, isEnded));
 
-  repostQueues.set(poll.pollId, next);
+  repostQueues.set(pollId, next);
 
   // Drop the entry once this is the last repost in the chain (keeps the Map small)
   next.finally(() => {
-    if (repostQueues.get(poll.pollId) === next) {
-      repostQueues.delete(poll.pollId);
+    if (repostQueues.get(pollId) === next) {
+      repostQueues.delete(pollId);
     }
   });
 
   return next;
 }
 
-// Does the actual delete-old + send-new work. Reads poll.messageId at call time,
-// which is now always current because reposts are serialized by repostPoll().
-async function doRepost(interaction, poll, isEnded = false) {
+// Does the actual delete-old + send-new work. Re-fetches the poll from the DB
+// at call time so the rendered embed always reflects the latest committed
+// votes/options — even under simultaneous interactions.
+async function doRepost(interaction, pollId, isEnded = false) {
+  const poll = await polls.getPoll(pollId);
+  if (!poll) return;
+
   const channel = interaction.channel;
 
   const embed = isEnded ? embedBuilder.buildResultEmbed(poll) : embedBuilder.buildPollEmbed(poll);
@@ -50,7 +54,7 @@ async function doRepost(interaction, poll, isEnded = false) {
     oldMessage ? oldMessage.delete().catch(() => null) : Promise.resolve(),
   ]);
 
-  polls.setMessageId(poll.pollId, newMessage.id);
+  await polls.setMessageId(pollId, newMessage.id);
 }
 
 // Only the poll creator or a server admin (ManageMessages) may manage a poll
@@ -145,7 +149,7 @@ async function handlePollCommand(interaction) {
 
   const displayName = interaction.member?.displayName || interaction.user.username;
 
-  const poll = polls.createPoll({
+  const poll = await polls.createPoll({
     question,
     options,
     creatorId:   interaction.user.id,
@@ -162,7 +166,7 @@ async function handlePollCommand(interaction) {
     withResponse: true,
   });
 
-  polls.setMessageId(poll.pollId, response.resource.message.id);
+  await polls.setMessageId(poll.pollId, response.resource.message.id);
 }
 
 // Vote button 
@@ -170,13 +174,13 @@ async function handleVote(interaction, pollId, optionId) {
   // Acknowledge FIRST before any other logic
   await interaction.deferUpdate();
   
-  const poll = polls.getPoll(pollId);
+  const poll = await polls.getPoll(pollId);
   if (!poll) {
     return interaction.followUp({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
-  const result = polls.toggleVote(pollId, optionId, interaction.user.id, displayName);
+  const result = await polls.toggleVote(pollId, optionId, interaction.user.id, displayName);
 
   if (!result) {
     return interaction.followUp({ content: MSG.REPLY_OPTION_NOT_FOUND, flags: MessageFlags.Ephemeral });
@@ -188,10 +192,10 @@ async function handleVote(interaction, pollId, optionId) {
 
   // Why deferUpdate() before repostPoll() ?
   // When a user clicks a button, Discord expects an immediate response within 3 seconds
-  // or it shows an error. deferUpdate() tells Discord "acknowledged, I'm working on it" 
+  // or it shows an error. deferUpdate() tells Discord "acknowledged, I'm working on it"
   // while we do the delete + repost which can take a moment. Without it you'd get interaction failed errors.
-  // await interaction.deferUpdate();  
-  await repostPoll(interaction, poll);
+  // await interaction.deferUpdate();
+  await repostPoll(interaction, pollId);
 
   // Display message of who just added/removed a vote
   const opt = poll.options.find(o => o.id === optionId);
@@ -226,7 +230,7 @@ async function handleAddOptionModal(interaction, pollId) {
 
 // Add option — handle modal submit 
 async function handleAddOptionSubmit(interaction, pollId) {
-  const poll = polls.getPoll(pollId);
+  const poll = await polls.getPoll(pollId);
   if (!poll) {
     return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
@@ -237,17 +241,17 @@ async function handleAddOptionSubmit(interaction, pollId) {
   }
 
   const displayName = interaction.member?.displayName || interaction.user.username;
-  const result = polls.addOption(pollId, label, interaction.user.id, displayName);
+  const result = await polls.addOption(pollId, label, interaction.user.id, displayName);
 
   if (result === 'duplicate') {
     return interaction.reply({ content: MSG.REPLY_DUPLICATE(label), flags: MessageFlags.Ephemeral });
   }
 
-  // Respond to Discord immediately to prevent "Something went wrong" 
+  // Respond to Discord immediately to prevent "Something went wrong"
   await interaction.reply({ content: MSG.CONFIRM_OPTION_ADDED, flags: MessageFlags.Ephemeral });
 
   // Repost the poll, bring it to the bottom of convo
-  await repostPoll(interaction, poll);
+  await repostPoll(interaction, pollId);
   await interaction.channel.send(MSG.REPLY_OPTION_ADDED(displayName, label));
 }
 
@@ -255,7 +259,7 @@ async function handleAddOptionSubmit(interaction, pollId) {
 async function handleEndPoll(interaction, pollId) {
   await interaction.deferUpdate();
 
-  const poll = polls.getPoll(pollId);
+  const poll = await polls.getPoll(pollId);
   if (!poll) {
     return interaction.followUp({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
@@ -269,12 +273,12 @@ async function handleEndPoll(interaction, pollId) {
   }
 
 
-  await repostPoll(interaction, poll, true);
+  await repostPoll(interaction, pollId, true);
 }
 
 // Edit option — show the list of current options to pick from
 async function handleEditOptionSelect(interaction, pollId) {
-  const poll = polls.getPoll(pollId);
+  const poll = await polls.getPoll(pollId);
   if (!poll) {
     return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
@@ -312,7 +316,7 @@ async function handleEditOptionSelect(interaction, pollId) {
 async function handleEditOptionChosen(interaction, pollId) {
   const optionId = interaction.values[0];
 
-  const poll = polls.getPoll(pollId);
+  const poll = await polls.getPoll(pollId);
   if (!poll) {
     return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
@@ -340,7 +344,7 @@ async function handleEditOptionChosen(interaction, pollId) {
 
 // Edit option — handle modal submit, update the label and repost
 async function handleEditOptionSubmit(interaction, pollId, optionId) {
-  const poll = polls.getPoll(pollId);
+  const poll = await polls.getPoll(pollId);
   if (!poll) {
     return interaction.reply({ content: MSG.REPLY_POLL_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
@@ -353,7 +357,7 @@ async function handleEditOptionSubmit(interaction, pollId, optionId) {
     return interaction.reply({ content: MSG.REPLY_EMPTY_OPTION, flags: MessageFlags.Ephemeral });
   }
 
-  const result = polls.editOption(pollId, optionId, newLabel);
+  const result = await polls.editOption(pollId, optionId, newLabel);
   if (result === 'not_found') {
     return interaction.reply({ content: MSG.REPLY_OPTION_NOT_FOUND, flags: MessageFlags.Ephemeral });
   }
@@ -367,7 +371,7 @@ async function handleEditOptionSubmit(interaction, pollId, optionId) {
   await interaction.reply({ content: MSG.CONFIRM_OPTION_EDITED, flags: MessageFlags.Ephemeral });
 
   // Repost the poll, bring it to the bottom of convo
-  await repostPoll(interaction, poll);
+  await repostPoll(interaction, pollId);
   await interaction.channel.send(MSG.REPLY_OPTION_EDITED(displayName, oldLabel, newLabel));
 }
 
